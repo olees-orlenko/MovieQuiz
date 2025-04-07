@@ -1,14 +1,10 @@
-//
-//  QuizQuestionMock.swift
-//  MovieQuiz
-//
-//  Created by Олеся Орленко on 20.03.2025.
-//
-
 import Foundation
 
-struct QuizQuestionMock {
-    static let questions: [QuizQuestion] = [
+final class QuizQuestionMock:  QuestionFactoryProtocol {
+    private weak var delegate: QuestionFactoryDelegate?
+    private var shuffledQuestions: [QuizQuestion] = []
+    
+    private let questions: [QuizQuestion] = [
         QuizQuestion(image: "The Godfather",
                      text: "Рейтинг этого фильма больше чем 6?",
                      correctAnswer: true),
@@ -40,5 +36,23 @@ struct QuizQuestionMock {
                      text: "Рейтинг этого фильма больше чем 6?",
                      correctAnswer: false)
     ]
+    
+    func setup(delegate: QuestionFactoryDelegate) {
+        self.delegate = delegate
+        shuffledQuestions = questions.shuffled()
+    }
+    
+    func requestNextQuestion() {
+        guard !shuffledQuestions.isEmpty else {
+            shuffledQuestions = questions.shuffled()
+            requestNextQuestion()
+            return
+        }
+        guard let question = shuffledQuestions.first else {
+            delegate?.didReceiveNextQuestion(question: nil)
+            return
+        }
+        shuffledQuestions.removeFirst()
+        delegate?.didReceiveNextQuestion(question: question)
+    }
 }
-
