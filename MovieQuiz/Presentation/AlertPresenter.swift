@@ -1,12 +1,4 @@
-//
-//  AlertPresenter.swift
-//  MovieQuiz
-//
-//  Created by Олеся Орленко on 31.03.2025.
-//
-
 import UIKit
-
 
 final class ResultAlertPresenter {
     private weak var delegate: UIViewController?

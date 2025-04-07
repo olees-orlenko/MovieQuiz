@@ -11,7 +11,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     @IBOutlet private var textLabel: UILabel!
     
     @IBOutlet private var imageView: UIImageView!
-
+    
     // MARK: - Private Properties
     
     private var currentQuestionIndex = 0
@@ -33,12 +33,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         self.questionFactory = questionFactory
         questionFactory.requestNextQuestion()
         clearBorder()
-        }
+    }
     
     // MARK: - QuestionFactoryDelegate
-
+    
     func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question = question else {
+        guard let question else {
             return
         }
         currentQuestion = question
@@ -72,9 +72,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private func convert(model: QuizQuestion) -> QuizStepModel {
         return QuizStepModel(
-                    image: UIImage(named: model.image) ?? UIImage(),
-                    question: model.text,
-                    questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
+            image: UIImage(named: model.image) ?? UIImage(),
+            question: model.text,
+            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
     
     private func show(quiz step: QuizStepModel) {
@@ -83,7 +83,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         textLabel.text = step.question
         clearBorder()
     }
-
+    
     private func show(quiz result: QuizResultsModel) {
         guard let alertPresenter = alertPresenter else{
             return
@@ -99,10 +99,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
                 self.clearBorder()
                 self.questionFactory.requestNextQuestion()
             }
-            )
+        )
         alertPresenter.showAlert(result: alert)
     }
-
+    
     private func showAnswerResult(isCorrect: Bool) {
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
@@ -118,7 +118,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             self.showNextQuestionOrResults()
         }
     }
-
+    
     private func showNextQuestionOrResults() {
         stopClickButton(isEnabled: true)
         if currentQuestionIndex == questionsAmount - 1 {
@@ -137,16 +137,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             Средняя точность: \(String(format: "%.2f", totalAccuracy))%
             """
             let viewModel = QuizResultsModel(
-                    title: "Этот раунд окончен!",
-                    text: message,
-                    buttonText: "Сыграть ещё раз")
+                title: "Этот раунд окончен!",
+                text: message,
+                buttonText: "Сыграть ещё раз")
             show(quiz: viewModel)
         } else {
             currentQuestionIndex += 1
             self.questionFactory.requestNextQuestion()
         }
     }
-
+    
     private func clearBorder(){
         imageView.layer.borderWidth = 0
     }
@@ -155,5 +155,5 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         noButton.isEnabled = isEnabled
         yesButton.isEnabled = isEnabled
     }
-
+    
 }

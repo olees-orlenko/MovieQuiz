@@ -1,17 +1,9 @@
-//
-//  QuizQuestionMock.swift
-//  MovieQuiz
-//
-//  Created by Олеся Орленко on 20.03.2025.
-//
-
 import Foundation
 
-
-class QuizQuestionMock:  QuestionFactoryProtocol {
+final class QuizQuestionMock:  QuestionFactoryProtocol {
     private weak var delegate: QuestionFactoryDelegate?
     private var shuffledQuestions: [QuizQuestion] = []
-
+    
     private let questions: [QuizQuestion] = [
         QuizQuestion(image: "The Godfather",
                      text: "Рейтинг этого фильма больше чем 6?",
