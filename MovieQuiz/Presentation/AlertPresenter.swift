@@ -1,9 +1,9 @@
 import UIKit
 
-final class ResultAlertPresenter {
-    private weak var delegate: UIViewController?
+final class ResultAlertPresenter: AlertProtocol {
+    private weak var delegate: AlertDelegate?
     
-    init(delegate: UIViewController?) {
+    init(delegate: AlertDelegate?) {
         self.delegate = delegate
     }
     
@@ -15,6 +15,6 @@ final class ResultAlertPresenter {
         let action = UIAlertAction(title: result.buttonText, style: .default) { _ in result.completion()
         }
         alert.addAction(action)
-        delegate?.present(alert, animated: true, completion: nil)
+        delegate?.present(alert: alert)
     }
 }
