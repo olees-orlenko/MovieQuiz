@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
+final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, AlertDelegate {
     
     // MARK: - IB Outlets
     
@@ -46,6 +46,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         DispatchQueue.main.async { [weak self] in
             self?.show(quiz: viewModel)
         }
+    }
+    
+    // MARK: - AlertDelegate
+    
+    func present(alert: UIAlertController) {
+        self.present(alert, animated: true, completion: nil)
     }
     
     // MARK: - Actions
