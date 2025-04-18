@@ -12,11 +12,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     
     @IBOutlet private var imageView: UIImageView!
     
+    @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     // MARK: - Private Properties
     
     private var currentQuestionIndex = 0
     private var correctAnswers = 0
-    private var questionFactory: QuestionFactoryProtocol = QuizQuestionMock()
+    private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
     private var alertPresenter: ResultAlertPresenter?
     private var statisticService: StatisticServiceProtocol?
@@ -28,24 +29,32 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         super.viewDidLoad()
         statisticService = StatisticService()
         alertPresenter = ResultAlertPresenter(delegate: self)
-        let questionFactory = QuizQuestionMock()
-        questionFactory.setup(delegate: self)
-        self.questionFactory = questionFactory
-        questionFactory.requestNextQuestion()
+        questionFactory = QuizQuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        imageView.layer.cornerRadius = 20
+        showLoadingIndicator()
+        questionFactory?.loadData()
         clearBorder()
     }
     
     // MARK: - QuestionFactoryDelegate
     
     func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question else {
-            return
-        }
+        guard let question else { return }
+        
         currentQuestion = question
         let viewModel = convert(model: question)
         DispatchQueue.main.async { [weak self] in
             self?.show(quiz: viewModel)
         }
+    }
+    
+    func didLoadDataFromServer() {
+        hideLoadingIndicator()
+        questionFactory?.requestNextQuestion()
+    }
+    
+    func didFailToLoadData(with error: Error) {
+        showNetworkError(message: error.localizedDescription)
     }
     
     // MARK: - AlertDelegate
@@ -78,7 +87,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     
     private func convert(model: QuizQuestion) -> QuizStepModel {
         return QuizStepModel(
-            image: UIImage(named: model.image) ?? UIImage(),
+            image: UIImage(data: model.image) ?? UIImage(),
             question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
@@ -91,19 +100,19 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     }
     
     private func show(quiz result: QuizResultsModel) {
-        guard let alertPresenter = alertPresenter else{
-            return
-        }
+        guard let alertPresenter else { return }
+        
         let alert = AlertModel(
             title: result.title,
             message: result.text,
             buttonText: result.buttonText,
             completion: { [weak self] in
-                guard let self = self else { return }
+                guard let self else { return }
+                
                 self.currentQuestionIndex = 0
                 self.correctAnswers = 0
                 self.clearBorder()
-                self.questionFactory.requestNextQuestion()
+                self.questionFactory?.requestNextQuestion()
             }
         )
         alertPresenter.showAlert(result: alert)
@@ -120,7 +129,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
             imageView.layer.borderColor = UIColor.ypRed.cgColor
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
+            
             self.showNextQuestionOrResults()
         }
     }
@@ -128,9 +138,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     private func showNextQuestionOrResults() {
         stopClickButton(isEnabled: true)
         if currentQuestionIndex == questionsAmount - 1 {
-            guard let statisticService = statisticService else {
-                return
-            }
+            guard let statisticService else { return }
+            
             statisticService.store(correct: correctAnswers, total: questionsAmount)
             let bestGame = statisticService.bestGame
             let date = bestGame.date.dateTimeString
@@ -149,7 +158,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
             show(quiz: viewModel)
         } else {
             currentQuestionIndex += 1
-            self.questionFactory.requestNextQuestion()
+            self.questionFactory?.requestNextQuestion()
         }
     }
     
@@ -162,4 +171,29 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         yesButton.isEnabled = isEnabled
     }
     
+    private func showLoadingIndicator() {
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
+    }
+    
+    private func hideLoadingIndicator(){
+        activityIndicator.isHidden = true
+        activityIndicator.stopAnimating()
+    }
+    
+    private func showNetworkError(message: String) {
+        hideLoadingIndicator()
+        let alert = AlertModel(
+            title: "Что-то пошло не так(",
+            message: "Невозможно загрузить данные",
+            buttonText: "Попробовать ещё раз",
+            completion: { [weak self] in
+                guard let self else { return }
+                
+                self.showLoadingIndicator()
+                self.questionFactory?.loadData()
+            }
+        )
+        alertPresenter?.showAlert(result: alert)
+    }
 }
