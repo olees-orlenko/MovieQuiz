@@ -29,7 +29,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         super.viewDidLoad()
         statisticService = StatisticService()
         alertPresenter = ResultAlertPresenter(delegate: self)
-        questionFactory = QuizQuestionMock(moviesLoader: MoviesLoader(), delegate: self)
+        questionFactory = QuizQuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         imageView.layer.cornerRadius = 20
         showLoadingIndicator()
         questionFactory?.loadData()
@@ -39,9 +39,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     // MARK: - QuestionFactoryDelegate
     
     func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question else {
-            return
-        }
+        guard let question else { return }
+        
         currentQuestion = question
         let viewModel = convert(model: question)
         DispatchQueue.main.async { [weak self] in
@@ -50,7 +49,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     }
     
     func didLoadDataFromServer() {
-        activityIndicator.isHidden = true
+        hideLoadingIndicator()
         questionFactory?.requestNextQuestion()
     }
     
@@ -101,15 +100,15 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     }
     
     private func show(quiz result: QuizResultsModel) {
-        guard let alertPresenter = alertPresenter else{
-            return
-        }
+        guard let alertPresenter else { return }
+        
         let alert = AlertModel(
             title: result.title,
             message: result.text,
             buttonText: result.buttonText,
             completion: { [weak self] in
-                guard let self = self else { return }
+                guard let self else { return }
+                
                 self.currentQuestionIndex = 0
                 self.correctAnswers = 0
                 self.clearBorder()
@@ -130,7 +129,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
             imageView.layer.borderColor = UIColor.ypRed.cgColor
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
+            
             self.showNextQuestionOrResults()
         }
     }
@@ -138,9 +138,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     private func showNextQuestionOrResults() {
         stopClickButton(isEnabled: true)
         if currentQuestionIndex == questionsAmount - 1 {
-            guard let statisticService = statisticService else {
-                return
-            }
+            guard let statisticService else { return }
+            
             statisticService.store(correct: correctAnswers, total: questionsAmount)
             let bestGame = statisticService.bestGame
             let date = bestGame.date.dateTimeString
@@ -189,7 +188,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
             message: "Невозможно загрузить данные",
             buttonText: "Попробовать ещё раз",
             completion: { [weak self] in
-                guard let self = self else { return }
+                guard let self else { return }
+                
                 self.showLoadingIndicator()
                 self.questionFactory?.loadData()
             }

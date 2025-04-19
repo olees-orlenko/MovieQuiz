@@ -1,10 +1,13 @@
 import Foundation
 
-struct NetworkClient {
+final class NetworkClient {
     
     private enum NetworkError: Error {
         case codeError
+        case invalidStatusCode
     }
+    
+    // MARK: - Data Fetching
     
     func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void) {
         let request = URLRequest(url: url)
@@ -13,9 +16,12 @@ struct NetworkClient {
                 handler(.failure(error))
                 return
             }
-            if let response = response as? HTTPURLResponse,
-               response.statusCode < 200 || response.statusCode >= 300 {
+            guard let response = response as? HTTPURLResponse else {
                 handler(.failure(NetworkError.codeError))
+                return
+            }
+            guard (200...299).contains(response.statusCode) else {
+                handler(.failure(NetworkError.invalidStatusCode))
                 return
             }
             guard let data = data else { return }
