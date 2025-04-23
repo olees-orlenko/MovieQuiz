@@ -13,11 +13,10 @@ struct MoviesLoader: MoviesLoading {
     
     private var mostPopularMoviesUrl: URL {
         guard let url = URL(string: API.mostPopularMovies) else {
-            preconditionFailure("Invalid URL")
+            preconditionFailure("Неверный URL")
         }
         return url
     }
-    
     
     // MARK: - Data Fetching
     
@@ -29,7 +28,7 @@ struct MoviesLoader: MoviesLoading {
                     let mostPopularMovies = try JSONDecoder().decode(MostPopularMovies.self, from: data)
                     handler(.success(mostPopularMovies))
                 } catch {
-                    handler(.failure(error))
+                    handler(.failure(NetworkError.decodingError(message: "Ошибка при обработке данных с сервера")))
                 }
             case .failure(let error):
                 handler(.failure(error))

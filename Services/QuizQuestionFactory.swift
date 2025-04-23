@@ -38,12 +38,13 @@ final class QuizQuestionFactory:  QuestionFactoryProtocol {
         URLSession.shared.dataTask(with: movie.resizedImageURL) { [weak self] data, _, error in
             guard let self = self else { return }
             guard let imageData = data, error == nil else {
-                print("Failed to load image")
+                print("Ошибка при загрузке изображения")
                 return
             }
             let rating = Float(movie.rating) ?? 0
-            let text = "Рейтинг этого фильма больше чем 8?"
-            let correctAnswer = rating > 8
+            let ratingInQuestion = round(Float.random(in: 7...9) * 10) / 10
+            let text = "Рейтинг этого фильма > \(ratingInQuestion)?"
+            let correctAnswer = rating > ratingInQuestion
             let question = QuizQuestion(image: imageData,
                                         text: text,
                                         correctAnswer: correctAnswer)
