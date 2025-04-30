@@ -15,8 +15,6 @@ final class MovieQuizViewController: UIViewController, AlertDelegate {
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     // MARK: - Private Properties
     
-    private var correctAnswers = 0
-    var questionFactory: QuestionFactoryProtocol?
     private var alertPresenter: ResultAlertPresenter?
     private var presenter: MovieQuizPresenter!
 
@@ -26,7 +24,6 @@ final class MovieQuizViewController: UIViewController, AlertDelegate {
         super.viewDidLoad()
         presenter = MovieQuizPresenter(viewController: self)
         alertPresenter = ResultAlertPresenter(delegate: self)
-        questionFactory = QuizQuestionFactory(moviesLoader: MoviesLoader(), delegate: presenter)
         imageView.layer.cornerRadius = 20
         showLoadingIndicator()
         clearBorder()
@@ -78,21 +75,10 @@ final class MovieQuizViewController: UIViewController, AlertDelegate {
         alertPresenter.showAlert(result: alert)
     }
     
-    func showAnswerResult(isCorrect: Bool) {
+    func highlightImageBorder(isCorrect: Bool) {
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
-        imageView.layer.cornerRadius = 20
-        if isCorrect {
-            presenter.correctAnswers += 1
-            imageView.layer.borderColor = UIColor.ypGreen.cgColor
-        } else {
-            imageView.layer.borderColor = UIColor.ypRed.cgColor
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self else { return }
-            
-            self.presenter.showNextQuestionOrResults()
-        }
+                imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
     }
     
     private func clearBorder(){

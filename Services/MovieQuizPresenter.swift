@@ -1,20 +1,20 @@
 import UIKit
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
-    let questionsAmount: Int = 10
-    var currentQuestion: QuizQuestion?
+    private let questionsAmount: Int = 10
+    private var currentQuestion: QuizQuestion?
     var currentQuestionIndex: Int = 0
     var correctAnswers: Int = 0
-    var statisticService: StatisticServiceProtocol?
-    var questionFactory: QuestionFactoryProtocol?
+    private let statisticService: StatisticServiceProtocol?
+    private var questionFactory: QuestionFactoryProtocol?
     private weak var viewController: MovieQuizViewController?
     
     init(viewController: MovieQuizViewController) {
         self.viewController = viewController
+        statisticService = StatisticService()
+        viewController.showLoadingIndicator()
         questionFactory = QuizQuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         questionFactory?.loadData()
-        viewController.showLoadingIndicator()
-        statisticService = StatisticService()
     }
     
     func didReceiveNextQuestion(question: QuizQuestion?) {
@@ -27,7 +27,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         }
     }
     
-    func showNextQuestionOrResults() {
+    private func proceedToNextQuestionOrResults() {
         viewController?.stopClickButton(isEnabled: true)
         if isLastQuestion() {
             guard let statisticService else { return }
@@ -54,6 +54,15 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         }
     }
     
+    private func proceedWithAnswer(isCorrect: Bool) {
+        didAnswer(isCorrectAnswer: isCorrect)
+        viewController?.highlightImageBorder(isCorrect: isCorrect)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self else { return }
+            self.proceedToNextQuestionOrResults()
+        }
+    }
+    
     func restartGame() {
         currentQuestionIndex = 0
         correctAnswers = 0
@@ -75,8 +84,14 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             return
         }
         let answer = isYes
-        viewController?.showAnswerResult(isCorrect: answer == newQuestion.correctAnswer)
+        proceedWithAnswer(isCorrect: answer == newQuestion.correctAnswer)
     }
+
+    func didAnswer(isCorrectAnswer: Bool) {
+         if isCorrectAnswer {
+             correctAnswers += 1
+         }
+     }
     
     func isLastQuestion() -> Bool {
         currentQuestionIndex == questionsAmount - 1
