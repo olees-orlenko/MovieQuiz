@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, AlertDelegate {
+final class MovieQuizViewController: UIViewController, AlertDelegate {
     
     // MARK: - IB Outlets
     
@@ -18,37 +18,20 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     private var correctAnswers = 0
     var questionFactory: QuestionFactoryProtocol?
     private var alertPresenter: ResultAlertPresenter?
-    private var presenter = MovieQuizPresenter()
-    
+    private var presenter: MovieQuizPresenter!
+
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        presenter = MovieQuizPresenter()
-        presenter.viewController = self
+        presenter = MovieQuizPresenter(viewController: self)
         alertPresenter = ResultAlertPresenter(delegate: self)
-        questionFactory = QuizQuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        questionFactory = QuizQuestionFactory(moviesLoader: MoviesLoader(), delegate: presenter)
         imageView.layer.cornerRadius = 20
         showLoadingIndicator()
-        questionFactory?.loadData()
         clearBorder()
     }
-    
-    // MARK: - QuestionFactoryDelegate
-    
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        presenter.didReceiveNextQuestion(question: question)
-    }
-    
-    func didLoadDataFromServer() {
-        hideLoadingIndicator()
-        questionFactory?.requestNextQuestion()
-    }
-    
-    func didFailToLoadData(with error: Error) {
-        showNetworkError(message: error.localizedDescription)
-    }
-    
+
     // MARK: - AlertDelegate
     
     func present(alert: UIAlertController) {
@@ -89,7 +72,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
                 self.presenter.currentQuestionIndex = 0
                 self.presenter.correctAnswers = 0
                 self.clearBorder()
-                self.questionFactory?.requestNextQuestion()
+                self.presenter.restartGame()
             }
         )
         alertPresenter.showAlert(result: alert)
@@ -108,7 +91,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self else { return }
             
-            self.questionFactory = self.questionFactory
             self.presenter.showNextQuestionOrResults()
         }
     }
@@ -122,17 +104,17 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         yesButton.isEnabled = isEnabled
     }
     
-    private func showLoadingIndicator() {
+    func showLoadingIndicator() {
         activityIndicator.isHidden = false
         activityIndicator.startAnimating()
     }
     
-    private func hideLoadingIndicator(){
+    func hideLoadingIndicator(){
         activityIndicator.isHidden = true
         activityIndicator.stopAnimating()
     }
     
-    private func showNetworkError(message: String) {
+    func showNetworkError(message: String) {
         hideLoadingIndicator()
         let alert = AlertModel(
             title: "Что-то пошло не так(",
@@ -142,7 +124,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
                 guard let self else { return }
                 
                 self.showLoadingIndicator()
-                self.questionFactory?.loadData()
+                self.presenter.restartGame()
             }
         )
         alertPresenter?.showAlert(result: alert)
