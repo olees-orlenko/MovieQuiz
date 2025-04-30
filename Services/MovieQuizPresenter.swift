@@ -2,7 +2,27 @@ import UIKit
 
 final class MovieQuizPresenter {
     let questionsAmount: Int = 10
+    var currentQuestion: QuizQuestion?
     var currentQuestionIndex: Int = 0
+    weak var viewController: MovieQuizViewController?
+    
+    func yesButtonClicked() {
+        guard let newQuestion = currentQuestion else {
+            return
+        }
+        let answer = true
+        viewController?.stopClickButton(isEnabled: false)
+        viewController?.showAnswerResult(isCorrect: answer == newQuestion.correctAnswer)
+    }
+    
+    func noButtonClicked() {
+        guard let newQuestion = currentQuestion else {
+            return
+        }
+        let answer = false
+        viewController?.stopClickButton(isEnabled: false)
+        viewController?.showAnswerResult(isCorrect: answer == newQuestion.correctAnswer)
+    }
     
     func isLastQuestion() -> Bool {
         currentQuestionIndex == questionsAmount - 1

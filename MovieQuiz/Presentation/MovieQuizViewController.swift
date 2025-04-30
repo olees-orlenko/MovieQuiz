@@ -27,6 +27,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     override func viewDidLoad() {
         super.viewDidLoad()
         presenter = MovieQuizPresenter()
+        presenter.viewController = self
         statisticService = StatisticService()
         alertPresenter = ResultAlertPresenter(delegate: self)
         questionFactory = QuizQuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
@@ -66,21 +67,15 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     // MARK: - Actions
     
     @IBAction private func noButtonClicked(_ sender: Any) {
-        guard let newQuestion = currentQuestion else {
-            return
-        }
-        let answer = false
+        presenter.currentQuestion = currentQuestion
+        presenter.noButtonClicked()
         stopClickButton(isEnabled: false)
-        showAnswerResult(isCorrect: answer == newQuestion.correctAnswer)
     }
     
     @IBAction private func yesButtonClicked(_ sender: Any) {
-        guard let newQuestion = currentQuestion else {
-            return
-        }
-        let answer = true
+        presenter.currentQuestion = currentQuestion
+        presenter.yesButtonClicked()
         stopClickButton(isEnabled: false)
-        showAnswerResult(isCorrect: answer == newQuestion.correctAnswer)
     }
     
     // MARK: - Private Methods
@@ -111,7 +106,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         alertPresenter.showAlert(result: alert)
     }
     
-    private func showAnswerResult(isCorrect: Bool) {
+    func showAnswerResult(isCorrect: Bool) {
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
         imageView.layer.cornerRadius = 20
@@ -159,7 +154,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         imageView.layer.borderWidth = 0
     }
     
-    private func stopClickButton(isEnabled: Bool){
+    func stopClickButton(isEnabled: Bool){
         noButton.isEnabled = isEnabled
         yesButton.isEnabled = isEnabled
     }
