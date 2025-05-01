@@ -1,15 +1,20 @@
 import UIKit
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
-    private let questionsAmount: Int = 10
-    private var currentQuestion: QuizQuestion?
+    
+    // MARK: - Properties
+    
     var currentQuestionIndex: Int = 0
     var correctAnswers: Int = 0
+    var questionFactory: QuestionFactoryProtocol?
+    var currentQuestion: QuizQuestion?
+    private weak var viewController: MovieQuizViewControllerProtocol?
     private let statisticService: StatisticServiceProtocol?
-    private var questionFactory: QuestionFactoryProtocol?
-    private weak var viewController: MovieQuizViewController?
+    private let questionsAmount: Int = 10
     
-    init(viewController: MovieQuizViewController) {
+    // MARK: - Initializer
+    
+    init(viewController: MovieQuizViewControllerProtocol) {
         self.viewController = viewController
         statisticService = StatisticService()
         viewController.showLoadingIndicator()
@@ -17,15 +22,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         questionFactory?.loadData()
     }
     
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question else { return }
-        
-        currentQuestion = question
-        let viewModel = convert(model: question)
-        DispatchQueue.main.async { [weak self] in
-            self?.viewController?.show(quiz: viewModel)
-        }
-    }
+    // MARK: - Private methods
     
     private func proceedToNextQuestionOrResults() {
         viewController?.stopClickButton(isEnabled: true)
@@ -63,6 +60,26 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         }
     }
     
+    private func didAnswer(isYes: Bool) {
+        guard let newQuestion = currentQuestion else {
+            return
+        }
+        let answer = isYes
+        proceedWithAnswer(isCorrect: answer == newQuestion.correctAnswer)
+    }
+
+    // MARK: - Public methods
+    
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        guard let question else { return }
+        
+        currentQuestion = question
+        let viewModel = convert(model: question)
+        DispatchQueue.main.async { [weak self] in
+            self?.viewController?.show(quiz: viewModel)
+        }
+    }
+    
     func restartGame() {
         currentQuestionIndex = 0
         correctAnswers = 0
@@ -79,14 +96,6 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         viewController?.stopClickButton(isEnabled: false)
     }
     
-    private func didAnswer(isYes: Bool) {
-        guard let newQuestion = currentQuestion else {
-            return
-        }
-        let answer = isYes
-        proceedWithAnswer(isCorrect: answer == newQuestion.correctAnswer)
-    }
-
     func didAnswer(isCorrectAnswer: Bool) {
          if isCorrectAnswer {
              correctAnswers += 1

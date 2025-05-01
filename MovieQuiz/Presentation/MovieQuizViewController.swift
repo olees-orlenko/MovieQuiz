@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController, AlertDelegate {
+final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol, AlertDelegate {
     
     // MARK: - IB Outlets
     
@@ -13,11 +13,12 @@ final class MovieQuizViewController: UIViewController, AlertDelegate {
     @IBOutlet private var imageView: UIImageView!
     
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
+    
     // MARK: - Private Properties
     
     private var alertPresenter: ResultAlertPresenter?
     private var presenter: MovieQuizPresenter!
-
+    
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
@@ -28,7 +29,7 @@ final class MovieQuizViewController: UIViewController, AlertDelegate {
         showLoadingIndicator()
         clearBorder()
     }
-
+    
     // MARK: - AlertDelegate
     
     func present(alert: UIAlertController) {
@@ -47,7 +48,13 @@ final class MovieQuizViewController: UIViewController, AlertDelegate {
         stopClickButton(isEnabled: false)
     }
     
-    // MARK: - Private Methods
+    // MARK: - Private methods
+    
+    private func clearBorder(){
+        imageView.layer.borderWidth = 0
+    }
+    
+    // MARK: - Public methods
     
     func show(quiz step: QuizStepModel) {
         counterLabel.text = step.questionNumber
@@ -78,11 +85,7 @@ final class MovieQuizViewController: UIViewController, AlertDelegate {
     func highlightImageBorder(isCorrect: Bool) {
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
-                imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
-    }
-    
-    private func clearBorder(){
-        imageView.layer.borderWidth = 0
+        imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
     }
     
     func stopClickButton(isEnabled: Bool){
