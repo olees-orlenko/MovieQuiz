@@ -1,6 +1,10 @@
 import Foundation
 
-final class NetworkClient {
+protocol NetworkRouting {
+    func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void)
+}
+
+final class NetworkClient: NetworkRouting {
     
     // MARK: - Data Fetching
     
